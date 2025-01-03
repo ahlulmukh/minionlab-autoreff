@@ -400,7 +400,7 @@ async function main() {
   console.log(chalk.magenta("\n[*] Selesai!"));
   console.log(
     chalk.green(
-      `[*] Akun yang berhasil dibuat ${successful} out of ${count} accounts`
+      `[*] Akun yang berhasil dibuat ${successful} dari ${count} akun`
     )
   );
   console.log(
