@@ -50,6 +50,11 @@ This bot automates the process of creating accounts and using referral codes for
 - Make sure to use valid proxies to avoid IP bans.
 - The bot will attempt to verify the email up to 5 times before giving up.
 
+# Join Channel El Puqus Airdrop For Information Airdrop
+
+- Channel Telegram : [Telegram](https://t.me/elpuqus)
+- Channel WhatsApp : [Whatsapp](https://whatsapp.com/channel/0029VavBRhGBqbrEF9vxal1R)
+
 ## Disclaimer
 
 This tool is for educational purposes only. Use it at your own risk.
