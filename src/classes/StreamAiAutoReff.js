@@ -1,8 +1,28 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
-const { faker } = require("@faker-js/faker");
+const { google } = require("googleapis");
 const UserAgent = require("user-agents");
 const { logMessage } = require("../utils");
+const fs = require("fs");
+const path = require("path");
+const TOKEN_PATH = path.join(__dirname, "../json/token.json");
+const confEmail = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "../json/client_secret.json"))
+).email;
+
+function loadOAuth2Client() {
+  const credentials = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "../json/client_secret.json"))
+  );
+  const { client_id, client_secret, redirect_uris } = credentials.installed;
+  const oAuth2Client = new google.auth.OAuth2(
+    client_id,
+    client_secret,
+    redirect_uris[0]
+  );
+  const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+  oAuth2Client.setCredentials(token);
+  return oAuth2Client;
+}
 
 class StreamAiAutoReff {
   constructor(refCode, proxy = null) {
@@ -19,6 +39,11 @@ class StreamAiAutoReff {
       }),
       timeout: 60000,
     };
+    this.gmailClient = google.gmail({
+      version: "v1",
+      auth: loadOAuth2Client(),
+    });
+    this.baseEmail = confEmail;
   }
 
   async makeRequest(method, url, config = {}) {
@@ -49,77 +74,18 @@ class StreamAiAutoReff {
     }
   }
 
-  async getRandomDomain() {
+  generateTempEmail() {
+    const randomAlias = Math.floor(Math.random() * 10000);
+    const tempEmail = `${
+      this.baseEmail.split("@")[0]
+    }+${randomAlias}@gmail.com`;
     logMessage(
       this.currentNum,
       this.total,
-      "Mencari domain yang tersedia...",
-      "process"
-    );
-    const vowels = "aeiou";
-    const consonants = "bcdfghjklmnpqrstvwxyz";
-    const keyword =
-      consonants[Math.floor(Math.random() * consonants.length)] +
-      vowels[Math.floor(Math.random() * vowels.length)];
-
-    const response = await this.makeRequest(
-      "GET",
-      `https://generator.email/search.php?key=${keyword}`
-    );
-
-    if (!response || !response.data) {
-      logMessage(
-        this.currentNum,
-        this.total,
-        "Tidak dapat menemukan list domain.",
-        "error"
-      );
-      return null;
-    }
-
-    const domains = response.data.filter((d) => /^[\x00-\x7F]*$/.test(d));
-
-    if (domains.length) {
-      const selectedDomain =
-        domains[Math.floor(Math.random() * domains.length)];
-      logMessage(
-        this.currentNum,
-        this.total,
-        `Memilih domain: ${selectedDomain}`,
-        "success"
-      );
-      return selectedDomain;
-    }
-
-    logMessage(
-      this.currentNum,
-      this.total,
-      "Tidak dapat mencari domain yang valid",
-      "error"
-    );
-    return null;
-  }
-
-  generateEmail(domain) {
-    logMessage(
-      this.currentNum,
-      this.total,
-      "Membuat email address...",
-      "process"
-    );
-    const firstName = faker.person.firstName().toLowerCase();
-    const lastName = faker.person.lastName().toLowerCase();
-    const randomNums = Math.floor(Math.random() * 900 + 100).toString();
-
-    const separator = Math.random() > 0.5 ? "" : ".";
-    const email = `${firstName}${separator}${lastName}${randomNums}@${domain}`;
-    logMessage(
-      this.currentNum,
-      this.total,
-      `Email dibuat: ${email}`,
+      `Email dibuat: ${tempEmail}`,
       "success"
     );
-    return email;
+    return tempEmail;
   }
 
   async sendEmailCode(email) {
@@ -146,62 +112,48 @@ class StreamAiAutoReff {
     return true;
   }
 
-  async getCodeVerification(email, domain) {
-    logMessage(this.currentNum, this.total, "Verifikasi Akun...", "process");
-
-    const cookies = {
-      embx: `%22${email}%22`,
-      surl: `${domain}/${email.split("@")[0]}`,
-    };
-
-    const headers = {
-      "User-Agent": this.ua.toString(),
-      Cookie: Object.entries(cookies)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("; "),
-    };
+  async getCodeVerification(tempEmail) {
+    logMessage(
+      this.currentNum,
+      this.total,
+      "Menunggu kode verifikasi...",
+      "process"
+    );
 
     const maxAttempts = 5;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       logMessage(
         this.currentNum,
         this.total,
-        `Mencoba mengambil kode verifikasi... Percobaan ${attempt + 1}`,
+        `Percobaan ${attempt + 1}`,
         "process"
       );
+      const messages = await this.gmailClient.users.messages.list({
+        userId: "me",
+        q: `to:${tempEmail}`,
+      });
 
-      const response = await this.makeRequest(
-        "GET",
-        "https://generator.email/inbox/",
-        { headers }
-      );
+      if (messages.data.messages && messages.data.messages.length > 0) {
+        const messageId = messages.data.messages[0].id;
+        const message = await this.gmailClient.users.messages.get({
+          userId: "me",
+          id: messageId,
+        });
 
-      if (!response || !response.data) {
-        logMessage(
-          this.currentNum,
-          this.total,
-          "Gagal mendapatkan respons dari server email generator.",
-          "error"
+        const snippet = message.data.snippet;
+        const codeMatch = snippet.match(
+          /Your verification code is: (\d\s\d\s\d\s\d)/
         );
-        continue;
-      }
-
-      const $ = cheerio.load(response.data);
-
-      const spans = $("div[style='margin: 20px 0'] span");
-      const verifyCode = spans
-        .map((_, el) => $(el).text().trim())
-        .get()
-        .join("");
-
-      if (verifyCode) {
-        logMessage(
-          this.currentNum,
-          this.total,
-          `Kode Verifikasi ditemukan: ${verifyCode}`,
-          "success"
-        );
-        return verifyCode;
+        if (codeMatch) {
+          const verificationCode = codeMatch[1].replace(/\s/g, "");
+          logMessage(
+            this.currentNum,
+            this.total,
+            `Kode Verifikasi ditemukan: ${verificationCode}`,
+            "success"
+          );
+          return verificationCode;
+        }
       }
 
       logMessage(
@@ -222,10 +174,10 @@ class StreamAiAutoReff {
     return null;
   }
 
-  async registerAccount(email, password, domain) {
+  async registerAccount(email, password) {
     logMessage(this.currentNum, this.total, "Mendaftar Akun...", "process");
 
-    const verifyCode = await this.getCodeVerification(email, domain);
+    const verifyCode = await this.getCodeVerification(email);
     if (!verifyCode) {
       logMessage(
         this.currentNum,

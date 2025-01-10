@@ -66,4 +66,5 @@ module.exports = {
   loadProxies,
   getRandomProxy,
   logMessage,
+  rl,
 };
