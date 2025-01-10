@@ -45,6 +45,8 @@ because developer web stream not allowed temp email generator again, so im using
    - Download the `client_secret.json` open it and copy paste to `src/json/client_secret.json`.
    - Don't forget to change the email referral verification in `client_secret.json`.
 
+Tutorial video, how to get api credentials : [Here](https://t.me/elpuqus/138)
+
 ## Usage
 
 1. Run the bot:
