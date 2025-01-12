@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { google } = require("googleapis");
-const UserAgent = require("user-agents");
 const { logMessage } = require("../utils");
+const { getProxyAgent } = require("./proxy");
 const fs = require("fs");
 const path = require("path");
 const TOKEN_PATH = path.join(__dirname, "../json/token.json");
@@ -28,15 +28,8 @@ class StreamAiAutoReff {
   constructor(refCode, proxy = null) {
     this.refCode = refCode;
     this.proxy = proxy;
-    this.ua = new UserAgent();
     this.axiosConfig = {
-      ...(proxy && {
-        proxy: {
-          host: new URL(proxy).hostname,
-          port: new URL(proxy).port,
-          protocol: new URL(proxy).protocol,
-        },
-      }),
+      ...(this.proxy && { httpsAgent: getProxyAgent(this.proxy) }),
       timeout: 60000,
     };
     this.gmailClient = google.gmail({
@@ -98,7 +91,6 @@ class StreamAiAutoReff {
     const headers = {
       accept: "*/*",
       "content-type": "application/json;charset=UTF-8",
-      "user-agent": this.ua.toString(),
       Origin: "https://app.allstream.ai",
       Referer: "https://app.allstream.ai",
     };
@@ -191,7 +183,6 @@ class StreamAiAutoReff {
     const headers = {
       accept: "*/*",
       "content-type": "application/json;charset=UTF-8",
-      "user-agent": this.ua.toString(),
       Origin: "https://app.allstream.ai",
       Referer: "https://app.allstream.ai",
     };

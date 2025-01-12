@@ -1,12 +1,8 @@
-const {
-  prompt,
-  loadProxies,
-  getRandomProxy,
-  logMessage,
-  rl,
-} = require("./utils");
+const { prompt, logMessage, rl } = require("./utils");
 const StreamAiAutoReff = require("./classes/StreamAiAutoReff");
 const { authorize } = require("./classes/authGmail");
+const { getRandomProxy, loadProxies } = require("./classes/proxy");
+
 const chalk = require("chalk");
 const fs = require("fs");
 const path = require("path");
@@ -85,10 +81,13 @@ async function main() {
   `)
   );
 
-  const refCode = await prompt(chalk.yellow("Masukan Referral Code: "));
-  const count = parseInt(await prompt(chalk.yellow("Mau berapa banyak?: ")));
+  const refCode = await prompt(chalk.yellow("Enter Referral Code: "));
+  const count = parseInt(await prompt(chalk.yellow("How many do you want?")));
 
-  const proxies = loadProxies();
+  const proxiesLoaded = loadProxies();
+  if (!proxiesLoaded) {
+    console.log(chalk.yellow("No proxies available. Using default IP."));
+  }
   let successful = 0;
 
   const accountsStream = fs.createWriteStream("accounts.txt", { flags: "a" });
@@ -96,9 +95,9 @@ async function main() {
 
   for (let i = 0; i < count; i++) {
     console.log(chalk.white("-".repeat(85)));
-    logMessage(i + 1, count, "Proses Boskuuu", "debug");
+    logMessage(i + 1, count, "Process", "debug");
 
-    const currentProxy = getRandomProxy(proxies);
+    const currentProxy = await getRandomProxy();
     const generator = new StreamAiAutoReff(refCode, currentProxy);
 
     try {
