@@ -65,6 +65,7 @@ Tutorial video, how to get api credentials : [Here](https://t.me/elpuqus/138)
 
 ## Notes
 
+- If you get error `invalid creds` you can delete token in `src/json/token.json`
 - Make sure to use valid proxies to avoid IP bans.
 - The bot will attempt to verify the email up to 5 times before giving up.
 
