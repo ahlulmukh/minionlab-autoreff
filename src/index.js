@@ -1,4 +1,4 @@
-const { prompt, logMessage, rl } = require("./utils");
+const { prompt, logMessage, rl } = require("./utils/logger");
 const StreamAiAutoReff = require("./classes/StreamAiAutoReff");
 const { authorize } = require("./classes/authGmail");
 const { getRandomProxy, loadProxies } = require("./classes/proxy");

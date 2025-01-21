@@ -1,6 +1,6 @@
 const axios = require("axios");
 const { google } = require("googleapis");
-const { logMessage } = require("../utils");
+const { logMessage } = require("../utils/logger");
 const { getProxyAgent } = require("./proxy");
 const fs = require("fs");
 const path = require("path");
