@@ -2,6 +2,7 @@ const axios = require("axios");
 const { google } = require("googleapis");
 const { logMessage } = require("../utils/logger");
 const { getProxyAgent } = require("./proxy");
+const { EmailGenerator } = require("../utils/generator");
 const fs = require("fs");
 const path = require("path");
 const TOKEN_PATH = path.join(__dirname, "../json/token.json");
@@ -68,10 +69,8 @@ class StreamAiAutoReff {
   }
 
   generateTempEmail() {
-    const randomAlias = Math.floor(Math.random() * 10000);
-    const tempEmail = `${
-      this.baseEmail.split("@")[0]
-    }+${randomAlias}@gmail.com`;
+    const emailGenerator = new EmailGenerator(this.baseEmail);
+    const tempEmail = emailGenerator.generateRandomVariation();
     logMessage(
       this.currentNum,
       this.total,
