@@ -5,3 +5,4 @@ node_modules/
 src/json/token.json
 src/json/client_secret.json
 config.json
+proxy.txt

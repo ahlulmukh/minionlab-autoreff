@@ -1,4 +1,4 @@
-# StreamAi Auto Referral Bot
+# StreamAi / Minionlab Auto Referral Bot
 
 This bot automates the process of creating accounts and using referral codes for the StreamAi platform.
 
@@ -15,8 +15,9 @@ because developer web stream not allowed temp email generator again, so im using
 
 ## Requirements
 
-- Node.js
+- Node.js v18 lts
 - npm (Node Package Manager)
+- email and password gmail (for password gmail not your password email, using password app [here](https://www.youtube.com/watch?v=_rAoQeKpEtM) for tutorial how to get it)
 
 ## Installation
 
@@ -33,31 +34,25 @@ because developer web stream not allowed temp email generator again, so im using
    npm install
    ```
 
-3. Create a `proxy.txt` file in the root directory and add your proxies (one per line).
+3. Create a `proxy.txt` file if you want using proxy in the root directory and add your proxies (one per line).
+   format proxy
 
-4. change `client_secret.json.example` to `client_secret.json`.
+   ```sh
+   http://127.0.0.1:8080
+   http://user:pass@127.0.0.1:8080
+   ```
 
-5. Set up Gmail API credentials:
-   - Go to the [Google Cloud Console](https://console.developers.google.com/).
-   - Create a new project.
-   - Enable the Gmail API for the project.
-   - Create OAuth 2.0 credentials for a native application.
-   - Download the `client_secret.json` open it and copy paste to `src/json/client_secret.json`.
-   - Don't forget to change the email referral verification in `client_secret.json`.
-
-Tutorial video, how to get api credentials : [Here](https://t.me/elpuqus/138)
+4. change `config.json.example` to `config.json`.
 
 ## Usage
 
 1. Run the bot:
 
    ```sh
-   node main.js
+   node .
    ```
 
 2. Follow the prompts to enter your referral code and the number of accounts you want to create.
-
-3. If this is your first time running the bot, you will be prompted to authorize the application to access your Gmail account. Follow the instructions to complete the authorization.
 
 ## Output
 
@@ -65,7 +60,6 @@ Tutorial video, how to get api credentials : [Here](https://t.me/elpuqus/138)
 
 ## Notes
 
-- If you get error `invalid creds` you can delete token in `src/json/token.json`
 - Make sure to use valid proxies to avoid IP bans.
 - The bot will attempt to verify the email up to 5 times before giving up.
 

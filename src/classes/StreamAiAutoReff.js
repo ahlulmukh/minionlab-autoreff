@@ -1,30 +1,14 @@
 const axios = require("axios");
-const { google } = require("googleapis");
 const { logMessage } = require("../utils/logger");
+const { authorize } = require("./authGmail");
 const { getProxyAgent } = require("./proxy");
+const { simpleParser } = require("mailparser");
 const { EmailGenerator } = require("../utils/generator");
 const fs = require("fs");
 const path = require("path");
-const TOKEN_PATH = path.join(__dirname, "../json/token.json");
-const confEmail = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, "../json/client_secret.json"))
-).email;
-
-function loadOAuth2Client() {
-  const credentials = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, "../json/client_secret.json"))
-  );
-  const { client_id, client_secret, redirect_uris } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    redirect_uris[0]
-  );
-  const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
-  oAuth2Client.setCredentials(token);
-  return oAuth2Client;
-}
-
+const configPath = path.resolve(__dirname, "../json/config.json");
+const config = JSON.parse(fs.readFileSync(configPath));
+const confEmail = config.email;
 class StreamAiAutoReff {
   constructor(refCode, proxy = null) {
     this.refCode = refCode;
@@ -33,10 +17,6 @@ class StreamAiAutoReff {
       ...(this.proxy && { httpsAgent: getProxyAgent(this.proxy) }),
       timeout: 60000,
     };
-    this.gmailClient = google.gmail({
-      version: "v1",
-      auth: loadOAuth2Client(),
-    });
     this.baseEmail = confEmail;
   }
 
@@ -107,50 +87,71 @@ class StreamAiAutoReff {
     logMessage(
       this.currentNum,
       this.total,
-      "Menunggu kode verifikasi...",
+      "Waiting for code verification...",
       "process"
     );
-
+    const client = await authorize();
     const maxAttempts = 5;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       logMessage(
         this.currentNum,
         this.total,
-        `Percobaan ${attempt + 1}`,
+        `Attempt ${attempt + 1}`,
         "process"
       );
-      const messages = await this.gmailClient.users.messages.list({
-        userId: "me",
-        q: `to:${tempEmail}`,
-      });
 
-      if (messages.data.messages && messages.data.messages.length > 0) {
-        const messageId = messages.data.messages[0].id;
-        const message = await this.gmailClient.users.messages.get({
-          userId: "me",
-          id: messageId,
-        });
+      logMessage(
+        this.currentNum,
+        this.total,
+        "Waiting for 10sec...",
+        "warning"
+      );
+      await new Promise((resolve) => setTimeout(resolve, 10000));
 
-        const snippet = message.data.snippet;
-        const codeMatch = snippet.match(
-          /Your verification code is: (\d\s\d\s\d\s\d)/
-        );
-        if (codeMatch) {
-          const verificationCode = codeMatch[1].replace(/\s/g, "");
-          logMessage(
-            this.currentNum,
-            this.total,
-            `Kode Verifikasi ditemukan: ${verificationCode}`,
-            "success"
-          );
-          return verificationCode;
+      try {
+        const lock = await client.getMailboxLock("INBOX");
+        try {
+          const messages = await client.fetch("1:*", {
+            envelope: true,
+            source: true,
+          });
+
+          for await (const message of messages) {
+            if (message.envelope.to.some((to) => to.address === tempEmail)) {
+              const emailSource = message.source.toString();
+              const parsedEmail = await simpleParser(emailSource);
+              const verificationCode = this.extractVerificationCode(
+                parsedEmail.html
+              );
+              if (verificationCode) {
+                logMessage(
+                  this.currentNum,
+                  this.total,
+                  `Verification code found: ${verificationCode}`,
+                  "success"
+                );
+                return verificationCode;
+              } else {
+                logMessage(
+                  this.currentNum,
+                  this.total,
+                  "No verification code found in the email body.",
+                  "warning"
+                );
+              }
+            }
+          }
+        } finally {
+          lock.release();
         }
+      } catch (error) {
+        console.error("Error fetching emails:", error);
       }
 
       logMessage(
         this.currentNum,
         this.total,
-        "Kode belum tersedia. Menunggu 5 detik sebelum mencoba lagi...",
+        "Verification code not found. Waiting for 5 sec...",
         "warning"
       );
       await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -159,9 +160,24 @@ class StreamAiAutoReff {
     logMessage(
       this.currentNum,
       this.total,
-      "Gagal mendapatkan kode verifikasi setelah beberapa percobaan.",
+      "Error get code verification.",
       "error"
     );
+    return null;
+  }
+
+  extractVerificationCode(html) {
+    if (!html) return null;
+    const codeMatch = html.match(
+      /<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>/
+    );
+
+    if (codeMatch) {
+      const verificationCode =
+        codeMatch[1] + codeMatch[2] + codeMatch[3] + codeMatch[4];
+      return verificationCode;
+    }
+
     return null;
   }
 
