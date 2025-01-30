@@ -15,16 +15,14 @@ class EmailGenerator {
 }
 
 function generateRandomPassword(length = 12) {
-  const charset =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
-  let password = "";
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length);
-    password += charset[randomIndex];
-  }
-
-  return password;
+  const firstLetter = String.fromCharCode(Math.floor(Math.random() * 26) + 65);
+  const otherLetters = Array.from({ length: 4 }, () =>
+    String.fromCharCode(Math.floor(Math.random() * 26) + 97)
+  ).join("");
+  const numbers = Array.from({ length: 3 }, () =>
+    Math.floor(Math.random() * 10)
+  ).join("");
+  return `${firstLetter}${otherLetters}@${numbers}!`;
 }
 
 module.exports = { EmailGenerator, generateRandomPassword };
