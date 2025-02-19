@@ -24,13 +24,15 @@ async function main() {
     console.log(chalk.yellow("No proxies available. Using default IP."));
   }
   let successful = 0;
+  let attempts = 0;
 
   const accountsStream = fs.createWriteStream("accounts.txt", { flags: "a" });
   const accountsBot = fs.createWriteStream("accountsBot.txt", { flags: "a" });
 
-  for (let i = 0; i < count; i++) {
+  while (successful < count) {
+    attempts++;
     console.log(chalk.white("-".repeat(85)));
-    logMessage(i + 1, count, "Process", "debug");
+    logMessage(attempts, count, "Process", "debug");
 
     const currentProxy = await getRandomProxy();
     const generator = new StreamAiAutoReff(refCode, currentProxy);
@@ -51,18 +53,23 @@ async function main() {
         accountsBot.write(`${email}:${password}\n`);
 
         successful++;
-        logMessage(i + 1, count, "Akun Berhasil Dibuat!", "success");
-        logMessage(i + 1, count, `Email: ${email}`, "success");
-        logMessage(i + 1, count, `Password: ${password}`, "success");
-        logMessage(i + 1, count, `Reff To: ${refCode}`, "success");
+        logMessage(attempts, count, "Akun Berhasil Dibuat!", "success");
+        logMessage(attempts, count, `Email: ${email}`, "success");
+        logMessage(attempts, count, `Password: ${password}`, "success");
+        logMessage(attempts, count, `Reff To: ${refCode}`, "success");
       } else {
-        logMessage(i + 1, count, "Gagal Membuat Akun", "error");
+        logMessage(attempts, count, "Gagal Membuat Akun", "error");
         if (generator.proxy) {
-          logMessage(i + 1, count, `Failed proxy: ${generator.proxy}`, "error");
+          logMessage(
+            attempts,
+            count,
+            `Failed proxy: ${generator.proxy}`,
+            "error"
+          );
         }
       }
     } catch (error) {
-      logMessage(i + 1, count, `Error: ${error.message}`, "error");
+      logMessage(attempts, count, `Error: ${error.message}`, "error");
     }
   }
 

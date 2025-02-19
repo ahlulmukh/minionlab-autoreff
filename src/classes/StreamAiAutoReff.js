@@ -124,7 +124,7 @@ class StreamAiAutoReff {
               const emailSource = message.source.toString();
               const parsedEmail = await simpleParser(emailSource);
               const verificationCode = this.extractVerificationCode(
-                parsedEmail.html
+                parsedEmail.text
               );
               if (verificationCode) {
                 logMessage(
@@ -169,19 +169,12 @@ class StreamAiAutoReff {
     return null;
   }
 
-  extractVerificationCode(html) {
-    if (!html) return null;
-    const codeMatch = html.match(
-      /<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>\s*<span style="[^"]*background-color: #007BFF;[^"]*">(\d)<\/span>/
+  extractVerificationCode(emailText) {
+    if (!emailText) return null;
+    const codeMatch = emailText.match(
+      /\b[A-Z0-9] [A-Z0-9] [A-Z0-9] [A-Z0-9] [A-Z0-9] [A-Z0-9]\b/
     );
-
-    if (codeMatch) {
-      const verificationCode =
-        codeMatch[1] + codeMatch[2] + codeMatch[3] + codeMatch[4];
-      return verificationCode;
-    }
-
-    return null;
+    return codeMatch ? codeMatch[0].replace(/\s/g, "") : null;
   }
 
   async registerAccount(email, password) {
