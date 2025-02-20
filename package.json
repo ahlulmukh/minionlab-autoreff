@@ -2,7 +2,7 @@
   "name": "streamai-autoref",
   "version": "1.0.0",
   "description": "auto reff stream-ai",
-  "main": "main.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

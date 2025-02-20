@@ -21,71 +21,73 @@ async function main() {
 
   const proxiesLoaded = loadProxies();
   if (!proxiesLoaded) {
-    console.log(chalk.yellow("No proxies available. Using default IP."));
+    logMessage(null, null, "No Proxy. Using default IP", "warning");
   }
   let successful = 0;
-  let attempts = 0;
+  let attempt = 1;
 
   const accountsStream = fs.createWriteStream("accounts.txt", { flags: "a" });
   const accountsBot = fs.createWriteStream("accountsBot.txt", { flags: "a" });
 
-  while (successful < count) {
-    attempts++;
-    console.log(chalk.white("-".repeat(85)));
-    logMessage(attempts, count, "Process", "debug");
+  try {
+    while (successful < count) {
+      console.log(chalk.white("-".repeat(85)));
+      const currentProxy = await getRandomProxy(successful + 1, count);
+      const generator = new StreamAiAutoReff(
+        refCode,
+        currentProxy,
+        successful + 1,
+        count
+      );
+      try {
+        const email = generator.generateTempEmail();
+        const password = generateRandomPassword();
+        const emailSent = await generator.sendEmailCode(email);
+        if (!emailSent) continue;
 
-    const currentProxy = await getRandomProxy();
-    const generator = new StreamAiAutoReff(refCode, currentProxy);
+        const account = await generator.registerAccount(email, password);
 
-    try {
-      const email = generator.generateTempEmail();
-      const password = generateRandomPassword();
-      const emailSent = await generator.sendEmailCode(email);
-      if (!emailSent) continue;
-
-      const account = await generator.registerAccount(email, password);
-
-      if (account) {
-        accountsStream.write(`Email: ${email}\n`);
-        accountsStream.write(`Password: ${password}\n`);
-        accountsStream.write(`Reff To: ${refCode}\n`);
-        accountsStream.write("-".repeat(85) + "\n");
-        accountsBot.write(`${email}:${password}\n`);
-
-        successful++;
-        logMessage(attempts, count, "Akun Berhasil Dibuat!", "success");
-        logMessage(attempts, count, `Email: ${email}`, "success");
-        logMessage(attempts, count, `Password: ${password}`, "success");
-        logMessage(attempts, count, `Reff To: ${refCode}`, "success");
-      } else {
-        logMessage(attempts, count, "Gagal Membuat Akun", "error");
-        if (generator.proxy) {
+        if (account) {
+          accountsStream.write(`Email: ${email}\n`);
+          accountsStream.write(`Password: ${password}\n`);
+          accountsStream.write(`Reff To: ${refCode}\n`);
+          accountsStream.write("-".repeat(85) + "\n");
+          accountsBot.write(`${email}:${password}\n`);
+          successful++;
+          logMessage(successful, count, "Akun Berhasil Dibuat!", "success");
+          logMessage(successful, count, `Email: ${email}`, "success");
+          logMessage(successful, count, `Password: ${password}`, "success");
+          logMessage(successful, count, `Reff To: ${refCode}`, "success");
+          attempt = 1;
+        } else {
           logMessage(
-            attempts,
+            successful + 1,
             count,
-            `Failed proxy: ${generator.proxy}`,
+            "Register Account Failed, retrying...",
             "error"
           );
+          attempt++;
         }
+      } catch (error) {
+        logMessage(
+          successful + 1,
+          count,
+          `Error: ${error.message}, retrying...`,
+          "error"
+        );
+        attempt++;
       }
-    } catch (error) {
-      logMessage(attempts, count, `Error: ${error.message}`, "error");
     }
+  } finally {
+    accountsStream.end();
+    accountsBot.end();
+    console.log(chalk.magenta("\n[*] Dono bang!"));
+    console.log(
+      chalk.green(`[*] Account dono ${successful} dari ${count} akun`)
+    );
+    console.log(chalk.magenta("[*] Result in accounts.txt"));
+    rl.close();
   }
-
-  accountsStream.end();
-  accountsBot.end();
-
-  console.log(chalk.magenta("\n[*] Selesai!"));
-  console.log(
-    chalk.green(
-      `[*] Akun yang berhasil dibuat ${successful} dari ${count} akun`
-    )
-  );
-  console.log(
-    chalk.magenta("[*] Hasil disimpan di accounts.txt dan accountsBot.txt")
-  );
-  rl.close();
 }
 
-module.exports = { main };
+main();

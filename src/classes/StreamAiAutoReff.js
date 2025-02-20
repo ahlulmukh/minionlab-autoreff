@@ -10,7 +10,9 @@ const configPath = path.resolve(__dirname, "../json/config.json");
 const config = JSON.parse(fs.readFileSync(configPath));
 const confEmail = config.email;
 class StreamAiAutoReff {
-  constructor(refCode, proxy = null) {
+  constructor(refCode, proxy = null, currentNum, total) {
+    this.currentNum = currentNum;
+    this.total = total;
     this.refCode = refCode;
     this.proxy = proxy;
     this.axiosConfig = {

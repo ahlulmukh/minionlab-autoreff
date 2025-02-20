@@ -1,11 +1,12 @@
 const { HttpsProxyAgent } = require("https-proxy-agent");
-const chalk = require("chalk");
 const fs = require("fs");
 const axios = require("axios");
+const { logMessage } = require("../utils/logger");
+
 let proxyList = [];
 let axiosConfig = {};
 
-function getProxyAgent(proxyUrl) {
+function getProxyAgent(proxyUrl, index, total) {
   try {
     const isSocks = proxyUrl.toLowerCase().startsWith("socks");
     if (isSocks) {
@@ -16,7 +17,12 @@ function getProxyAgent(proxyUrl) {
       proxyUrl.startsWith("http") ? proxyUrl : `http://${proxyUrl}`
     );
   } catch (error) {
-    console.log(chalk.red(`[!] Error creating proxy agent: ${error.message}`));
+    logMessage(
+      index,
+      total,
+      `Error creating proxy agent: ${error.message}`,
+      "error"
+    );
     return null;
   }
 }
@@ -36,37 +42,40 @@ function loadProxies() {
       });
 
     if (proxyList.length === 0) {
-      throw new Error("No proxies found in proxies.txt");
+      throw new Error("No proxies found in proxy.txt");
     }
-    console.log(
-      chalk.green(`✓ Loaded ${proxyList.length} proxies from proxies.txt`)
+    logMessage(
+      null,
+      null,
+      `Loaded ${proxyList.length} proxies from proxy.txt`,
+      "success"
     );
     return true;
   } catch (error) {
-    console.error(chalk.red(`[!] Error loading proxies: ${error.message}`));
+    logMessage(null, null, `Error loading proxy: ${error.message}`, "error");
     return false;
   }
 }
 
-async function checkIP() {
+async function checkIP(index, total) {
   try {
     const response = await axios.get(
       "https://api.ipify.org?format=json",
       axiosConfig
     );
     const ip = response.data.ip;
-    console.log(chalk.green(`[+] Ip Using: ${ip}`));
-    return true;
+    logMessage(index, total, `IP Using: ${ip}`, "success");
+    return { success: true, ip: ip };
   } catch (error) {
-    console.log(chalk.red(`[!] Failed to get IP: ${error.message}`));
+    logMessage(index, total, `Failed to get IP: ${error.message}`, "error");
     return false;
   }
 }
 
-async function getRandomProxy() {
+async function getRandomProxy(index, total) {
   if (proxyList.length === 0) {
     axiosConfig = {};
-    await checkIP();
+    await checkIP(index, total);
     return null;
   }
 
@@ -74,20 +83,20 @@ async function getRandomProxy() {
   while (proxyAttempt < proxyList.length) {
     const proxy = proxyList[Math.floor(Math.random() * proxyList.length)];
     try {
-      const agent = getProxyAgent(proxy);
+      const agent = getProxyAgent(proxy, index, total);
       if (!agent) continue;
 
       axiosConfig.httpsAgent = agent;
-      await checkIP();
+      await checkIP(index, total);
       return proxy;
     } catch (error) {
       proxyAttempt++;
     }
   }
 
-  console.log(chalk.red("[!] Using default IP"));
+  logMessage(index, total, "Using default IP", "warning");
   axiosConfig = {};
-  await checkIP();
+  await checkIP(index, total);
   return null;
 }
 
