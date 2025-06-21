@@ -26,7 +26,7 @@ async function main() {
     logMessage(null, null, "No Proxy. Using default IP", "warning");
   }
 
-  const apikey = fs.createWriteStream("proxyfile.txt", { flags: "a" });
+  const accounts = fs.createWriteStream("accounts.txt", { flags: "a" });
   let successful = 0;
   let attempt = 1;
 
@@ -47,16 +47,14 @@ async function main() {
         const account = await scrape.singleProses();
 
         if (account) {
-          // apikey.write(
-          //   `${account.username}-zone-unblock-region-us:${account.password}@super.novada.pro:7777\n`
-          // );
+          accounts.write(`${account.email}:${account.password}\n`);
           successful++;
-          // logMessage(
-          //   successful,
-          //   count,
-          //   `Apikey : ${account.username}`,
-          //   "success"
-          // );
+          logMessage(
+            successful,
+            count,
+            `Account create succesfully : ${account.email}`,
+            "success"
+          );
           attempt = 1;
         } else {
           logMessage(
@@ -78,7 +76,7 @@ async function main() {
       }
     }
   } finally {
-    apikey.end();
+    accounts.end();
     console.log(chalk.magenta("\n[*] Dono bang!"));
     console.log(
       chalk.green(`[*] Account dono ${successful} dari ${count} akun`)

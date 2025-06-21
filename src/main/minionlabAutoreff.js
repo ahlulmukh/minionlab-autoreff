@@ -211,7 +211,6 @@ export default class MinionlabAutoreff {
       const registerResponse = await this.sendEmailCode(email);
       if (!registerResponse) return;
       const code = await this.getCodeVerification(email, domain);
-      console.log(code);
       if (!code) return;
       const token = await this.registerAccount(email, password, code);
       if (!token) return;
