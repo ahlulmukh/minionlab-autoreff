@@ -7,11 +7,13 @@ import { logMessage, prompt, rl } from "./utils/logger.js";
 async function main() {
   console.log(
     chalk.cyan(`
-░█▀█░█▀█░█░█░█▀█░█▀▄░█▀█
-░█░█░█░█░▀▄▀░█▀█░█░█░█▀█
-░▀░▀░▀▀▀░░▀░░▀░▀░▀▀░░▀░▀
-    By : El Puqus Airdrop
-    github.com/ahlulmukh
+ __  __ ___ _  _ ___ ___  _  _   _      _   ___
+|  \\/  |_ _| \\| |_ _/ _ \\| \\| | | |    /_\\ | _ )
+| |\\/| || || .\` || | (_) | .\` | | |__ / _ \\| _ \\
+|_|  |_|___|_|\\_|___\\___/|_|\\_| |____/_/ \\_\\___/
+        Minion Lab Auto Referral
+          By : El Puqus Airdrop
+         github.com/ahlulmukh
   `)
   );
 

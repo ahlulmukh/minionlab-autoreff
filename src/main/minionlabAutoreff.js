@@ -126,7 +126,7 @@ export default class MinionlabAutoreff {
         }
       );
 
-      if (response.data) {
+      if (response.data && response.data.code === 0) {
         logMessage(
           this.currentNum,
           this.total,
@@ -168,14 +168,14 @@ export default class MinionlabAutoreff {
           data: payload,
         }
       );
-      if (response.data) {
+      if (response.data && response.data.code === 0) {
         logMessage(
           this.currentNum,
           this.total,
           "Account registered",
           "success"
         );
-        return response.data;
+        return response.data.data.token;
       } else {
         logMessage(
           this.currentNum,
@@ -215,7 +215,11 @@ export default class MinionlabAutoreff {
       if (!code) return;
       const token = await this.registerAccount(email, password, code);
       if (!token) return;
-      return token;
+      return {
+        email: email,
+        password: password,
+        token: token,
+      };
     } catch (error) {
       logMessage(
         this.currentNum,
