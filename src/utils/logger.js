@@ -1,13 +1,18 @@
-const readline = require("readline");
-const chalk = require("chalk");
+import chalk from "chalk";
+import readline from "readline";
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const prompt = (question) =>
-  new Promise((resolve) => rl.question(question, resolve));
+const prompt = (question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
+};
 
 function logMessage(
   currentNum = null,
@@ -31,21 +36,21 @@ function logMessage(
   const accountStatus = currentNum && total ? `[${currentNum}/${total}] ` : "";
 
   const colors = {
-    info: chalk.white,
-    success: chalk.green,
-    error: chalk.red,
-    warning: chalk.yellow,
-    process: chalk.cyan,
+    info: chalk.blueBright,
+    success: chalk.greenBright,
+    error: chalk.redBright,
+    warning: chalk.yellowBright,
+    process: chalk.cyanBright,
     debug: chalk.blue,
   };
 
   const emojis = {
-    info: "ℹ️",
-    success: "✅",
-    error: "❌",
-    warning: "⚠️",
-    process: "🔄",
-    debug: "🐞",
+    info: "[i]",
+    success: "[✓]",
+    error: "[-]",
+    warning: "[!]",
+    process: "[>]",
+    debug: "[*]",
   };
 
   const logColor = colors[messageType] || chalk.white;
@@ -60,8 +65,4 @@ function logMessage(
   );
 }
 
-module.exports = {
-  prompt,
-  logMessage,
-  rl,
-};
+export { logMessage, prompt, rl };
