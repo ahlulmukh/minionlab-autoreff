@@ -81,7 +81,7 @@ async function main() {
     console.log(
       chalk.green(`[*] Account dono ${successful} dari ${count} akun`)
     );
-    console.log(chalk.magenta("[*] Result in proxyfile.txt"));
+    console.log(chalk.magenta("[*] Result in accounts.txt"));
     rl.close();
   }
 }
