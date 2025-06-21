@@ -1,10 +1,6 @@
-# StreamAi / Minionlab Auto Referral Bot
+# Minionlab Auto Referral Bot
 
 This bot automates the process of creating accounts and using referral codes for the StreamAi platform.
-
-## UPDATE
-
-because developer web stream not allowed temp email generator again, so im using gmail api for the ref.
 
 ## Features
 
@@ -17,15 +13,14 @@ because developer web stream not allowed temp email generator again, so im using
 
 - Node.js v18 lts
 - npm (Node Package Manager)
-- email and password gmail (for password gmail not your password email, using password app [here](https://www.youtube.com/watch?v=_rAoQeKpEtM) for tutorial how to get it)
 
 ## Installation
 
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/ahlulmukh/streamai-autoref.git
-   cd streamai-autoref
+   git clone https://github.com/ahlulmukh/minionlab-autoref.git
+   cd minionlab-autoref
    ```
 
 2. Install the dependencies:
@@ -42,8 +37,6 @@ because developer web stream not allowed temp email generator again, so im using
    http://user:pass@127.0.0.1:8080
    ```
 
-4. change `config.json.example` to `config.json`.
-
 ## Usage
 
 1. Run the bot:
@@ -56,7 +49,7 @@ because developer web stream not allowed temp email generator again, so im using
 
 ## Output
 
-- The created accounts will be saved in `accounts.txt` and `accountsBot.txt`.
+- The created accounts will be saved in `accounts.txt`
 
 ## Notes
 

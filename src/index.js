@@ -1,63 +1,60 @@
-const { prompt, logMessage, rl } = require("./utils/logger");
-const StreamAiAutoReff = require("./classes/StreamAiAutoReff");
-const { generateRandomPassword } = require("./utils/generator");
-const { getRandomProxy, loadProxies } = require("./classes/proxy");
-const chalk = require("chalk");
-const fs = require("fs");
+import chalk from "chalk";
+import fs from "fs";
+import MinionlabAutoreff from "./main/minionlabAutoreff.js";
+import ProxyManager from "./main/proxy.js";
+import { logMessage, prompt, rl } from "./utils/logger.js";
 
 async function main() {
   console.log(
     chalk.cyan(`
-░█▀▀░▀█▀░█▀▄░█▀▀░█▀█░█▄█░░░█▀█░▀█▀░░░█▀▄░█▀▀░█▀▀░█▀▀
-░▀▀█░░█░░█▀▄░█▀▀░█▀█░█░█░░░█▀█░░█░░░░█▀▄░█▀▀░█▀▀░█▀▀
-░▀▀▀░░▀░░▀░▀░▀▀▀░▀░▀░▀░▀░░░▀░▀░▀▀▀░░░▀░▀░▀▀▀░▀░░░▀░░
-                By : El Puqus Airdrop
-                github.com/ahlulmukh
+ __  __ ___ _  _ ___ ___  _  _   _      _   ___
+|  \\/  |_ _| \\| |_ _/ _ \\| \\| | | |    /_\\ | _ )
+| |\\/| || || .\` || | (_) | .\` | | |__ / _ \\| _ \\
+|_|  |_|___|_|\\_|___\\___/|_|\\_| |____/_/ \\_\\___/
+        Minion Lab Auto Referral
+          By : El Puqus Airdrop
+         github.com/ahlulmukh
   `)
   );
 
-  const refCode = await prompt(chalk.yellow("Enter Referral Code: "));
-  const count = parseInt(await prompt(chalk.yellow("How many do you want?")));
+  const count = parseInt(await prompt(chalk.yellow("How many do you want? ")));
+  const refCode = await prompt(chalk.yellow("Enter your referral code? "));
 
-  const proxiesLoaded = loadProxies();
+  const proxyManager = new ProxyManager();
+  const proxiesLoaded = proxyManager.loadProxies();
   if (!proxiesLoaded) {
     logMessage(null, null, "No Proxy. Using default IP", "warning");
   }
+
+  const accounts = fs.createWriteStream("accounts.txt", { flags: "a" });
   let successful = 0;
   let attempt = 1;
-
-  const accountsStream = fs.createWriteStream("accounts.txt", { flags: "a" });
-  const accountsBot = fs.createWriteStream("accountsBot.txt", { flags: "a" });
 
   try {
     while (successful < count) {
       console.log(chalk.white("-".repeat(85)));
-      const currentProxy = await getRandomProxy(successful + 1, count);
-      const generator = new StreamAiAutoReff(
+      const currentProxy = await proxyManager.getRandomProxy(
+        successful + 1,
+        count
+      );
+      const scrape = await MinionlabAutoreff.create(
         refCode,
         currentProxy,
         successful + 1,
         count
       );
       try {
-        const email = generator.generateTempEmail();
-        const password = generateRandomPassword();
-        const emailSent = await generator.sendEmailCode(email);
-        if (!emailSent) continue;
-
-        const account = await generator.registerAccount(email, password);
+        const account = await scrape.singleProses();
 
         if (account) {
-          accountsStream.write(`Email: ${email}\n`);
-          accountsStream.write(`Password: ${password}\n`);
-          accountsStream.write(`Reff To: ${refCode}\n`);
-          accountsStream.write("-".repeat(85) + "\n");
-          accountsBot.write(`${email}:${password}\n`);
+          accounts.write(`${account.email}:${account.password}\n`);
           successful++;
-          logMessage(successful, count, "Akun Berhasil Dibuat!", "success");
-          logMessage(successful, count, `Email: ${email}`, "success");
-          logMessage(successful, count, `Password: ${password}`, "success");
-          logMessage(successful, count, `Reff To: ${refCode}`, "success");
+          logMessage(
+            successful,
+            count,
+            `Account create succesfully : ${account.email}`,
+            "success"
+          );
           attempt = 1;
         } else {
           logMessage(
@@ -79,13 +76,12 @@ async function main() {
       }
     }
   } finally {
-    accountsStream.end();
-    accountsBot.end();
+    accounts.end();
     console.log(chalk.magenta("\n[*] Dono bang!"));
     console.log(
       chalk.green(`[*] Account dono ${successful} dari ${count} akun`)
     );
-    console.log(chalk.magenta("[*] Result in accounts.txt"));
+    console.log(chalk.magenta("[*] Result in proxyfile.txt"));
     rl.close();
   }
 }

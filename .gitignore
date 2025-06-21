@@ -1,8 +1,30 @@
-package-lock.json
-accounts.txt
-accountsBot.txt
+# Dependencies
 node_modules/
-src/json/token.json
-src/json/client_secret.json
-config.json
+bun.lockb
+
+# Runtime files
+*.log
+.env
+.env.local
+
+# Output files
+accounts.txt
+apikey.txt
 proxy.txt
+proxyfile.txt
+bun.lock
+accountsbot.txt
+
+# Package manager
+package-lock.json
+
+# Config (sensitive)
+config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
