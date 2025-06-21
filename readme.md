@@ -19,8 +19,8 @@ This bot automates the process of creating accounts and using referral codes for
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/ahlulmukh/minionlab-autoref.git
-   cd minionlab-autoref
+   git clone https://github.com/ahlulmukh/minionlab-autoreff.git
+   cd minionlab-autoreff
    ```
 
 2. Install the dependencies:
